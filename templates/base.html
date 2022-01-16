@@ -1,0 +1,235 @@
+{% load static %}
+
+{% load custom_tags %}
+
+<html>
+<head>
+    <title>BBS Home </title>
+    <!-- meta -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- css -->
+    <link href="{% static 'blog/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'blog/css/blogstyle.css' %}">
+    <!-- js -->
+    <script src="{% static 'blog/js/jquery-2.1.3.min.js' %}"></script>
+    <script src="{% static 'blog/js/bootstrap.min.js' %}"></script>
+   <style>
+        span.highlighted {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-default navbar-fixed-top" style="background-image: linear-gradient(80deg,#74ebd5, #9face6);">
+    <div class="container-fluid" >
+        <div class="navbar-header">
+            <img src="http://railway.yuweizhang.top/wp-content/uploads/2021/11/c5b459312711474b8b421bca43f15767.png" width="50"/>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'blog:index' %}" style="color:dimgrey;font-weight:700;">&nbsp;&nbsp;&nbsp;&nbsp;B612 Forum&nbsp;&nbsp;&nbsp;&nbsp; </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-left" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li {% if tabname == "firsttab" %} class='active' {% endif %}>
+                <a href="{% url 'blog:index' %}" style="color: dimgrey;">首页</a></li>
+
+                {% if request.user.username %}
+                <li {% if tabname == "mytab" %} class='active' {% endif %}>
+                <a href="{% url 'blog:myindex' request.user.id %}" data-hover="我的文章">我的文章</a></li>
+                {% endif %}
+
+                {% if request.user.username %}
+                <li {% if tabname == "posttab" %} class='active' {% endif %}>
+                <a href="{% url 'blog:post_create' %}" data-hover="创作中心">创作中心</a></li>
+                {% endif %}
+
+                {% if request.user.username %}
+                <li {% if tabname == "guanlitab" %} class='active' {% endif %}>
+                <a href="{% url 'blog:user_post' %}" data-hover="文章管理">文章管理</a></li>
+                {% endif %}
+
+                <form class="navbar-form navbar-left" method="get" action="{% url 'haystack_search' %}">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="q" placeholder="搜索" required>
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+        </div><!-- /.navbar-collapse -->
+        <ul class="nav navbar-nav navbar-right">
+            {% if request.user.username %}
+            <li><a href="#">{{ request.user.nikename }}</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                   aria-expanded="false"> 个人中心<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li role="separator" class="divider"></li>
+                    <li><a href="{% url 'blog:show_notice' %}">消息提示</a></li>
+                    <li><a href="{% url 'blog:profile' user.id %}">个人资料</a></li>
+                    <li><a href="{% url 'blog:logout' %}">注销</a></li>
+                </ul>
+            </li>
+            {% else %}
+            <li><a href="{% url 'blog:login' %}">登录</a></li>
+            <li><a href="{% url 'blog:registe' %}">注册</a></li>
+            {% endif %}
+        </ul>
+    </div><!-- /.container-fluid -->
+</nav>
+
+
+<div class="content-body" style="both:clear;margin-top:60px;">
+    <div class="container">
+        <div class="row">
+            <aside class="col-md-3">
+                {% block loc %}
+                <div class="panel panel-primary" >
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#66a6ff,#89f7fe);">最新文章</div>
+                    <div class="panel-body">
+                        {% get_new_blogs as new_blog_list %}
+                        <ul>
+                            {% for blog in new_blog_list %}
+                            <li>
+                                <a href="{{ blog.get_absolute_url }}">{{ blog.title }}</a>
+                            </li>
+                            {% empty %}
+                            暂无文章！
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="panel panel-success">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#96e6a1,#d4fc79);">分类</div>
+                    <div class="panel-body">
+                        {% get_categories as category_list %}
+                        <ul>
+                            {% for category in category_list %}
+                            <li>
+                                <a href="{% url 'blog:category' category.pk %}">{{ category.name }} <span
+                                        class="post-count">({{ category.num_blogs}})</span></a>
+                            </li>
+                            {% empty %}
+                            暂无分类！
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="panel panel-info">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#a1c4fd,#c2e9fb);">标签</div>
+                    <div class="panel-body">
+                        <div class="tag-list">
+                            {% get_tags as tag_list %}
+                            <ul >
+                                {% for tag in tag_list %}
+                                <li><a href="{% url 'blog:tag' tag.pk %}">{{ tag.name }}({{ tag.num_blogs }})</a>
+                                </li>
+                                {% empty %}
+                                暂无标签！
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#e2ebf0,#cfd9df);">归档</div>
+                    <div class="panel-body">
+                        {% archives as date_list %}
+                        <ul>
+                            {% for date in date_list %}
+                            <li>
+                                <a href="{% url 'blog:archives' date.year date.month %}">
+                                    {{ date.year }} 年 {{ date.month }}月</a>
+                            </li>
+                            {% empty %}
+                            暂无归档！
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% endblock loc %}
+            </aside>
+            <main class="col-md-6">
+                {% block main %}
+                {% endblock main %}
+            </main>
+            <aside class="col-md-3">
+                {% block toc %}
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#e2ebf0,#cfd9df);">热点帖子</div>
+                    <div class="panel-body">
+                        <ul>
+	                        {% for hot_post in hot_posts %}
+		                    <li>
+		                    <a href="{{ hot_post.get_absolute_url }}">{{ hot_post.title }}</a>
+		                    </li>
+                            {% empty %}
+                            暂无热点！
+	                        {% endfor %}
+	                    </ul>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#e2ebf0,#cfd9df);">论坛统计</div>
+                    <div class="panel-body">
+                        <ul>
+                            <li>注册人数：{{ foruminfo.account_number }}</li>
+                            <li>帖子数：{{ foruminfo.post_number }}</li>
+                            <li>今日: {{ foruminfo.today_post_number }}</li>
+                            <li>昨日: {{ foruminfo.lastday_post_number }}</li>
+	                    </ul>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-image: linear-gradient(80deg,#e2ebf0,#cfd9df);">最新评论</div>
+                    <div class="panel-body">
+                        <ul>
+                            {% for last_comment in last_comments %}
+                                <li>
+                                <a href="{{ last_comment.get_absolute_url }}">{{ last_comment.author }}:{{ last_comment.text }}</a>
+                                </li>
+                                {% empty %}
+                                 暂无评论！
+                            {% endfor %}
+	                    </ul>
+                    </div>
+                </div>
+                {% endblock toc %}
+            </aside>
+        </div>
+    </div>
+</div>
+
+<div align="center" style="color:ghostwhite; background-image: linear-gradient(80deg, #74ebd5, #9face6);  height: 150px ">
+    <div style="height: 100px; " >
+        <p style="padding-top: 30px;">Contact   |       Privacy     |  Sponsor</p>
+    </div>
+    <div style="height: 50px">
+       <h5>&copy 2021 - B612 Forum - what is essential is invisible to the eye </h5>
+    </div>
+</div>
+</body>
+</html>
+
